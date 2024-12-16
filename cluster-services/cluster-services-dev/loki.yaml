@@ -7,7 +7,7 @@ spec:
   destination:
     name: minikube
     namespace: loki
-  project: cluster-core-services
+  project: core-services
   revisionHistoryLimit: 10
   source:
     path: cluster-services/cluster-services-dev/values

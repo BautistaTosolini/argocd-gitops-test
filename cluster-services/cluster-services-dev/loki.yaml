@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
 spec:
   destination:
-    name: minikube
+    name: https://kubernetes.default.svc
     namespace: loki
   project: core-services
   revisionHistoryLimit: 10

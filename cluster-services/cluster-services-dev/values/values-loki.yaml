@@ -1,0 +1,128 @@
+deploymentMode: SimpleScalable
+chunksCache:
+  enabled: false
+resultsCache:
+  enabled: false
+backend:
+  replicas: 1
+  persistence:
+    volumeClaimsEnabled: true
+    enableStatefulSetAutoDeletePVC: true
+    size: 10Gi
+    storageClass: gp2
+gateway:
+  enabled: false
+ingress:
+  annotations:
+    alb.ingress.kubernetes.io/actions.ssl-redirect:
+      '{"Type": "redirect", "RedirectConfig":
+      { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/group.name: dev-internal
+    alb.ingress.kubernetes.io/healthcheck-path: /metrics
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/target-type: ip
+  enabled: true
+  hosts:
+    - loki.develop.sidom.io
+  ingressClassName: alb
+  paths:
+    singleBinary:
+      - /
+  tls: []
+loki:
+  auth_enabled: false
+  commonConfig:
+    path_prefix: /var/loki
+    replication_factor: 1
+  compactor:
+    working_directory: /var/loki/compactor
+  image:
+    pullPolicy: IfNotPresent
+    registry: docker.io
+    repository: grafana/loki
+    tag: 3.0.0
+  index_gateway:
+    mode: simple
+  ingester:
+    chunk_block_size: 262144
+    chunk_idle_period: 15m
+  limits_config:
+    allow_structured_metadata: false
+    max_cache_freshness_per_query: 10m
+    reject_old_samples: true
+    reject_old_samples_max_age: 168h
+    split_queries_by_interval: 15m
+    max_label_names_per_series: 40
+  podAnnotations: {}
+  schemaConfig:
+    configs:
+      - from: 2024-04-01
+        object_store: s3
+        store: tsdb
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+  server:
+    grpc_listen_port: 9095
+    http_listen_port: 3100
+  storage:
+    bucketNames:
+      admin: sidom-dev-loki-k8s-logs
+      chunks: sidom-dev-loki-k8s-logs
+      ruler: sidom-dev-loki-k8s-logs
+    filesystem:
+      chunks_directory: /var/loki/chunks
+      rules_directory: /var/loki/rules
+    s3:
+      accessKeyId: null
+      http_config: {}
+      insecure: false
+      region: us-east-2
+      s3: s3://us-east-2/sidom-dev-loki-k8s-logs
+      s3ForcePathStyle: false
+      secretAccessKey: null
+      signatureVersion: null
+    type: s3
+  storage_config:
+    tsdb_shipper:
+      active_index_directory: /var/loki/tsdb-index
+      cache_location: /var/loki/tsdb-cache
+      index_gateway_client:
+        # only applicable if using microservices where index-gateways are independently deployed.
+        # This example is using kubernetes-style naming.
+        server_address: loki-backend-headless.loki.svc.cluster.local:9095
+memberlist:
+  service:
+    publishNotReadyAddresses: true
+lokiCanary:
+  enabled: false
+monitoring:
+  enabled: false
+  selfMonitoring:
+    enabled: false
+    grafanaAgent:
+      installOperator: false
+networkPolicy:
+  enabled: false
+rbac:
+  pspEnabled: false
+  sccEnabled: false
+read:
+  replicas: 1
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::058264471563:role/sidom-dev-loki-role
+  automountServiceAccountToken: true
+  create: true
+
+write:
+  replicas: 1
+
+singleBinary:
+  replicas: 0
+
+tableManager:
+  enabled: false
+test:
+  enabled: false

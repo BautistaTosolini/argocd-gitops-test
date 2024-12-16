@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki-dev
+  namespace: argocd
+spec:
+  destination:
+    name: minikube
+    namespace: loki
+  project: cluster-core-services
+  revisionHistoryLimit: 10
+  source:
+    path: cluster-services/cluster-services-dev/values
+    plugin:
+      env:
+      - name: VALUES
+        value: values-loki.yaml
+      - name: CHART_VERSION
+        value: 6.1.0
+      - name: CHART_REPOSITORY_URL
+        value: https://grafana.github.io/helm-charts
+      - name: CHART_REPOSITORY
+        value: grafana
+      - name: CHART_NAME
+        value: loki
+      - name: PROJECT_NAME
+        value: loki
+      name: helm
+    repoURL: https://github.com/BautistaTosolini/argocd-gitops-test
+    targetRevision: main
